@@ -17,7 +17,7 @@ public sealed class Template : BaseEntity
     {
 
         var validationResult = ValidateInvariants(name, description);
-        if (!validationResult.IsFailure)
+        if (validationResult.IsFailure)
         {
             return Result.Failure<Template>(validationResult.Error);
         }
@@ -34,7 +34,7 @@ public sealed class Template : BaseEntity
     public Result Update(string name, string? description)
     {
         var validationResult = ValidateInvariants(name, description);
-        if (!validationResult.IsFailure)
+        if (validationResult.IsFailure)
         {
             return Result.Failure(validationResult.Error);
         }

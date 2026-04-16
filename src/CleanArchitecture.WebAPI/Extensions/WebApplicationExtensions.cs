@@ -1,10 +1,14 @@
-﻿namespace CleanArchitecture.WebAPI.Extensions;
+﻿using CleanArchitecture.Infrastructure.Logging;
+
+namespace CleanArchitecture.WebAPI.Extensions;
 
 public static class WebApplicationExtensions
 {
     public static WebApplication UseDefaults(this WebApplication app)
     {
         //app.MapDefaultEndpoints();
+
+        app.UseInfrastructureLogging();
 
         app.MapOpenApi();
         app.UseSwaggerUI(options =>

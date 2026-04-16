@@ -3,34 +3,37 @@ using CleanArchitecture.Infrastructure.Persistence.DbContexts;
 using CleanArchitecture.Infrastructure.Persistence.Interceptors;
 using CleanArchitecture.Infrastructure.Persistence.Repositories;
 using CleanArchitecture.SharedKernel;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Serilog;
 
 namespace CleanArchitecture.Infrastructure;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
+    public static WebApplicationBuilder AddInfrastructure(this WebApplicationBuilder builder)
     {
-        services.AddPersistence(configuration);
+        builder.AddPersistence();
+        builder.AddLogging();
 
-        return services;
+        return builder;
     }
 
-    private static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration)
+    private static WebApplicationBuilder AddPersistence(this WebApplicationBuilder builder)
     {
-        string? connectionString = configuration.GetConnectionString("Database");
+        string? connectionString = builder.Configuration.GetConnectionString("Database");
 
         if (string.IsNullOrWhiteSpace(connectionString))
         {
             throw new ArgumentNullException(nameof(connectionString), "The connection string to the database is not set");
         }
 
-        services.AddSingleton<SetUpdatedAtInterceptor>();
+        builder.Services.AddSingleton<SetUpdatedAtInterceptor>();
 
-        services.AddDbContext<ApplicationDbContext>((sp, opt) =>
+        builder.Services.AddDbContext<ApplicationDbContext>((sp, opt) =>
         {
             opt.UseSqlServer(connectionString, x =>
             {
@@ -46,10 +49,26 @@ public static class DependencyInjection
             opt.AddInterceptors(sp.GetRequiredService<SetUpdatedAtInterceptor>());
         });
 
-        services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<ApplicationDbContext>());
-        services.AddScoped<ITemplateRepository, TemplateRepository>();
+        builder.Services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<ApplicationDbContext>());
+        builder.Services.AddScoped<ITemplateRepository, TemplateRepository>();
 
 
-        return services;
+        return builder;
+    }
+
+    private static WebApplicationBuilder AddLogging(this WebApplicationBuilder builder)
+    {
+        // 1. Setup the "Bootstrap" logger for startup failures
+        Log.Logger = new LoggerConfiguration()
+            .WriteTo.Console()
+            .CreateBootstrapLogger();
+
+        // 2. Use Serilog and read from appsettings.json
+        builder.Host.UseSerilog((context, services, configuration) => configuration
+            .ReadFrom.Configuration(context.Configuration)
+            .ReadFrom.Services(services)
+            .Enrich.FromLogContext());
+
+        return builder;
     }
 }
