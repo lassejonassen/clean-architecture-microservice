@@ -1,4 +1,5 @@
-﻿using CleanArchitecture.Application.Abstractions.DomainEvents;
+﻿using CleanArchitecture.Application.Abstractions;
+using CleanArchitecture.Application.Abstractions.DomainEvents;
 using CleanArchitecture.Application.Abstractions.IntegrationEvents;
 using CleanArchitecture.Domain.Templates.Repositories;
 using CleanArchitecture.Infrastructure.BackgroundServices;
@@ -26,6 +27,10 @@ public static class DependencyInjection
         builder.AddLogging();
         builder.AddDomainEventHandlers();
         builder.AddIntegrationEvents();
+
+        builder.Services.AddScoped<CorrelationContext>();
+        builder.Services.AddScoped<ICorrelationContext>(sp => sp.GetRequiredService<CorrelationContext>());
+        builder.Services.AddScoped<ICorrelationIdSetter>(sp => sp.GetRequiredService<CorrelationContext>());
 
         return builder;
     }

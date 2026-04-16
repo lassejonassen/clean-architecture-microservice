@@ -14,4 +14,7 @@
     <Project Path="src/CleanArchitecture.WebAPI.Contracts/CleanArchitecture.WebAPI.Contracts.csproj" />
     <Project Path="src/CleanArchitecture.WebAPI/CleanArchitecture.WebAPI.csproj" />
   </Folder>
+  <Project Path="docker-compose.dcproj">
+    <Build />
+  </Project>
 </Solution>

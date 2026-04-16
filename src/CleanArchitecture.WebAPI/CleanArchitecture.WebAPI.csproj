@@ -1,6 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
 
+    <PropertyGroup>
+      <UserSecretsId>65d9a085-775c-4e8b-b46f-88f4060ec8ae</UserSecretsId>
+      <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+      <DockerfileContext>..\..</DockerfileContext>
+      <DockerComposeProjectPath>..\..\docker-compose.dcproj</DockerComposeProjectPath>
+    </PropertyGroup>
+
+
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
         <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" />

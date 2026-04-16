@@ -28,6 +28,7 @@ public class RabbitMqBus(IRabbitMqConnection connection, RabbitMqSettings settin
         {
             Persistent = true,
             ContentType = "application/json",
+            CorrelationId = integrationEvent.CorrelationId.ToString(),
             Type = typeof(T).Name
         };
 
