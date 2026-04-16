@@ -12,29 +12,36 @@ env:
   SOLUTION_NAME: CleanArchitecture-Microservice.slnx  # <-- Change this to your actual file name
 
 jobs:
-  build-and-validate:
+  # This job runs on every Push, PR, and Manual Dispatch
+  dotnet-build:
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    # --- Phase 1: Native .NET Validation ---
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
 
-    - name: Restore Dependencies
+    - name: Restore
       run: dotnet restore ${{ env.SOLUTION_NAME }}
 
-    - name: Build Solution
+    - name: Build
       run: dotnet build ${{ env.SOLUTION_NAME }} --no-restore --configuration Release
 
-    - name: Run Unit Tests
+    - name: Test
       run: dotnet test ${{ env.SOLUTION_NAME }} --no-build --verbosity normal
 
-    # --- Phase 2: Docker Compose Validation ---
+  # This job ONLY runs when you manually click "Run workflow"
+  docker-validate:
+    needs: dotnet-build # Ensures Docker only runs if the code actually builds first
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
     - name: Build Docker Images
       run: docker compose build
 
