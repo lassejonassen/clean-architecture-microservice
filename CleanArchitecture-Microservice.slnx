@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path="Add-Migration.ps1" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/CleanArchitecture.Application/CleanArchitecture.Application.csproj" />
+    <Project Path="src/CleanArchitecture.Domain/CleanArchitecture.Domain.csproj" />
+    <Project Path="src/CleanArchitecture.Infrastructure/CleanArchitecture.Infrastructure.csproj" />
+    <Project Path="src/CleanArchitecture.SharedKernel/CleanArchitecture.SharedKernel.csproj" />
+    <Project Path="src/CleanArchitecture.WebAPI.Contracts/CleanArchitecture.WebAPI.Contracts.csproj" />
+    <Project Path="src/CleanArchitecture.WebAPI/CleanArchitecture.WebAPI.csproj" />
+  </Folder>
+</Solution>
