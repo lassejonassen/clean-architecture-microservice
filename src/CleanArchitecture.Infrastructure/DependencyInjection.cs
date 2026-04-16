@@ -15,6 +15,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
+using Polly;
+using Polly.CircuitBreaker;
+using Polly.Retry;
+using RabbitMQ.Client;
 using Serilog;
 
 namespace CleanArchitecture.Infrastructure;
@@ -27,10 +32,8 @@ public static class DependencyInjection
         builder.AddLogging();
         builder.AddDomainEventHandlers();
         builder.AddIntegrationEvents();
-
-        builder.Services.AddScoped<CorrelationContext>();
-        builder.Services.AddScoped<ICorrelationContext>(sp => sp.GetRequiredService<CorrelationContext>());
-        builder.Services.AddScoped<ICorrelationIdSetter>(sp => sp.GetRequiredService<CorrelationContext>());
+        builder.AddResilience();
+        builder.AddHealthChecks();
 
         return builder;
     }
@@ -120,6 +123,76 @@ public static class DependencyInjection
         builder.Services.AddHostedService<ProcessIntegrationEventsJob>();
         builder.Services.AddHostedService<IntegrationEventConsumerWorker>();
 
+
+        return builder;
+    }
+
+    private static WebApplicationBuilder AddResilience(this WebApplicationBuilder builder)
+    {
+        builder.Services.AddResiliencePipeline("rabbitmq-connection", builder =>
+        {
+            builder.AddRetry(new RetryStrategyOptions
+            {
+                // Handle all exceptions or specify SocketException/BrokerUnreachableException
+                ShouldHandle = new PredicateBuilder().Handle<Exception>(),
+
+                MaxRetryAttempts = 5,
+
+                // Exponential backoff: 2s, 4s, 8s, 16s...
+                BackoffType = DelayBackoffType.Exponential,
+                Delay = TimeSpan.FromSeconds(2),
+
+                // Add "Jitter" to prevent all services from retrying at the exact same time
+                UseJitter = true,
+
+                OnRetry = args =>
+                {
+                    // Log the retry attempt so you can see it in Docker logs
+                    // Accessing logger here requires a different setup, or just use Console for now
+                    Console.WriteLine($"RabbitMQ Connection Attempt {args.AttemptNumber} failed. Retrying...");
+                    return default;
+                }
+            });
+
+            builder.AddCircuitBreaker(new CircuitBreakerStrategyOptions
+            {
+                ShouldHandle = new PredicateBuilder().Handle<Exception>(),
+                FailureRatio = 0.5, // Trip if 50% of attempts fail
+                SamplingDuration = TimeSpan.FromSeconds(30),
+                MinimumThroughput = 10,
+                BreakDuration = TimeSpan.FromSeconds(30) // Stop trying for 30s
+            });
+        });
+
+
+        return builder;
+    }
+
+    private static WebApplicationBuilder AddHealthChecks(this WebApplicationBuilder builder)
+    {
+        var settings = builder.Configuration.GetSection("RabbitMq").Get<RabbitMqSettings>()!;
+
+        builder.Services.AddHealthChecks()
+           .AddSqlServer(
+               connectionString: builder.Configuration.GetConnectionString("Database")!,
+               name: "sqlserver",
+               tags: ["db", "data"])
+           .AddRabbitMQ(
+                sp =>
+                {
+                    // Manually resolve settings inside the factory
+                    var settings = sp.GetRequiredService<IOptions<RabbitMqSettings>>().Value;
+                    var connection = new ConnectionFactory
+                    {
+                        HostName = settings.HostName,
+                        UserName = settings.UserName,
+                        Password = settings.Password
+                    };
+
+                    return connection.CreateConnectionAsync();
+                },
+                name: "rabbitmq",
+                tags: ["broker", "ready"]);
 
         return builder;
     }

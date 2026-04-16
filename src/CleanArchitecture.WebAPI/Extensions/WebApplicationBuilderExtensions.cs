@@ -1,4 +1,5 @@
-﻿using CleanArchitecture.Infrastructure;
+﻿using CleanArchitecture.Application.Abstractions;
+using CleanArchitecture.Infrastructure;
 using CleanArchitecture.SharedKernel;
 using CleanArchitecture.SharedKernel.Messaging;
 using System.Text.Json.Serialization;
@@ -13,8 +14,13 @@ public static class WebApplicationBuilderExtensions
             serviceName = builder.Environment.ApplicationName;
         }
 
+        builder.Services.AddSingleton<CorrelationContext>();
+        builder.Services.AddSingleton<ICorrelationContext>(sp => sp.GetRequiredService<CorrelationContext>());
+        builder.Services.AddSingleton<ICorrelationIdSetter>(sp => sp.GetRequiredService<CorrelationContext>());
+
         builder.Services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
         builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+        builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
         builder.Services.AddMediator();
         builder.Services.AddProblemDetails();
