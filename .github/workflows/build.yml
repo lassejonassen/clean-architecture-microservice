@@ -7,6 +7,10 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
 
+# Define your variables here
+env:
+  SOLUTION_NAME: CleanArchitecture-Microservice.slnx  # <-- Change this to your actual file name
+
 jobs:
   build-and-validate:
     runs-on: ubuntu-latest
@@ -22,13 +26,13 @@ jobs:
         dotnet-version: 8.0.x
 
     - name: Restore Dependencies
-      run: dotnet restore
+      run: dotnet restore ${{ env.SOLUTION_NAME }}
 
     - name: Build Solution
-      run: dotnet build --no-restore --configuration Release
+      run: dotnet build ${{ env.SOLUTION_NAME }} --no-restore --configuration Release
 
     - name: Run Unit Tests
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet test ${{ env.SOLUTION_NAME }} --no-build --verbosity normal
 
     # --- Phase 2: Docker Compose Validation ---
     - name: Build Docker Images
@@ -37,7 +41,7 @@ jobs:
     - name: Spin up Services
       run: docker compose up -d
 
-    - name: Verify Container Health
+    - name: Verify Container Status
       run: |
         sleep 5
         docker compose ps
