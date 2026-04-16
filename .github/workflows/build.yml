@@ -56,3 +56,41 @@ jobs:
     - name: Shutdown Containers
       if: always()
       run: docker compose down
+# jobs:
+#   build-and-validate:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#     - name: Checkout Code
+#       uses: actions/checkout@v4
+
+#     # --- Phase 1: Native .NET Validation ---
+#     - name: Setup .NET
+#       uses: actions/setup-dotnet@v4
+#       with:
+#         dotnet-version: 8.0.x
+
+#     - name: Restore Dependencies
+#       run: dotnet restore ${{ env.SOLUTION_NAME }}
+
+#     - name: Build Solution
+#       run: dotnet build ${{ env.SOLUTION_NAME }} --no-restore --configuration Release
+
+#     - name: Run Unit Tests
+#       run: dotnet test ${{ env.SOLUTION_NAME }} --no-build --verbosity normal
+
+#     # --- Phase 2: Docker Compose Validation ---
+#     - name: Build Docker Images
+#       run: docker compose build
+
+#     - name: Spin up Services
+#       run: docker compose up -d
+
+#     - name: Verify Container Status
+#       run: |
+#         sleep 5
+#         docker compose ps
+        
+#     - name: Shutdown Containers
+#       if: always()
+#       run: docker compose down
