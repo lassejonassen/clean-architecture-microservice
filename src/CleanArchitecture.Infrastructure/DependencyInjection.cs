@@ -1,4 +1,9 @@
-﻿using CleanArchitecture.Domain.Templates.Repositories;
+﻿using CleanArchitecture.Application;
+using CleanArchitecture.Application.Abstractions.DomainEvents;
+using CleanArchitecture.Domain._Shared;
+using CleanArchitecture.Domain.Templates.Repositories;
+using CleanArchitecture.Infrastructure.BackgroundServices;
+using CleanArchitecture.Infrastructure.DomainEvents;
 using CleanArchitecture.Infrastructure.Persistence.DbContexts;
 using CleanArchitecture.Infrastructure.Persistence.Interceptors;
 using CleanArchitecture.Infrastructure.Persistence.Repositories;
@@ -18,6 +23,7 @@ public static class DependencyInjection
     {
         builder.AddPersistence();
         builder.AddLogging();
+        builder.AddDomainEventHandlers();
 
         return builder;
     }
@@ -32,6 +38,7 @@ public static class DependencyInjection
         }
 
         builder.Services.AddSingleton<SetUpdatedAtInterceptor>();
+        builder.Services.AddSingleton<ConvertDomainEventsToOutboxMessagesInterceptor>();
 
         builder.Services.AddDbContext<ApplicationDbContext>((sp, opt) =>
         {
@@ -47,6 +54,7 @@ public static class DependencyInjection
             }
 
             opt.AddInterceptors(sp.GetRequiredService<SetUpdatedAtInterceptor>());
+            opt.AddInterceptors(sp.GetRequiredService<ConvertDomainEventsToOutboxMessagesInterceptor>());
         });
 
         builder.Services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<ApplicationDbContext>());
@@ -68,6 +76,21 @@ public static class DependencyInjection
             .ReadFrom.Configuration(context.Configuration)
             .ReadFrom.Services(services)
             .Enrich.FromLogContext());
+
+        return builder;
+    }
+
+    private static WebApplicationBuilder AddDomainEventHandlers(this WebApplicationBuilder builder)
+    {
+        builder.Services.Scan(scan => scan
+            .FromAssemblies(typeof(Application.AssemblyReference).Assembly)
+            .AddClasses(classes => classes.AssignableTo(typeof(IDomainEventHandler<>)))
+                .AsImplementedInterfaces()
+                .WithScopedLifetime());
+
+        builder.Services.AddScoped<IDomainEventPublisher, DomainEventPublisher>();
+
+        builder.Services.AddHostedService<ProcessDomainEventsJob>();
 
         return builder;
     }

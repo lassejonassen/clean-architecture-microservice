@@ -1,8 +1,9 @@
 ﻿using CleanArchitecture.Domain.Templates.Errors;
+using CleanArchitecture.Domain.Templates.Events;
 
 namespace CleanArchitecture.Domain.Templates.Entities;
 
-public sealed class Template : BaseEntity
+public sealed class Template : DomainEntity
 {
     public const int NameMaxLength = 100;
     public const int DescriptionMaxLength = 500;
@@ -27,6 +28,8 @@ public sealed class Template : BaseEntity
             Name = name,
             Description = description
         };
+
+        template.RaiseDomainEvent(new TemplateCreatedDomainEvent(template.Id));
 
         return Result.Success(template);
     }
