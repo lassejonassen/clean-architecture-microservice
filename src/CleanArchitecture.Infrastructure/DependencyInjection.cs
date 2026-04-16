@@ -1,9 +1,10 @@
-﻿using CleanArchitecture.Application;
-using CleanArchitecture.Application.Abstractions.DomainEvents;
-using CleanArchitecture.Domain._Shared;
+﻿using CleanArchitecture.Application.Abstractions.DomainEvents;
+using CleanArchitecture.Application.Abstractions.IntegrationEvents;
 using CleanArchitecture.Domain.Templates.Repositories;
 using CleanArchitecture.Infrastructure.BackgroundServices;
 using CleanArchitecture.Infrastructure.DomainEvents;
+using CleanArchitecture.Infrastructure.Messaging;
+using CleanArchitecture.Infrastructure.Messaging.RabbitMq;
 using CleanArchitecture.Infrastructure.Persistence.DbContexts;
 using CleanArchitecture.Infrastructure.Persistence.Interceptors;
 using CleanArchitecture.Infrastructure.Persistence.Repositories;
@@ -24,6 +25,7 @@ public static class DependencyInjection
         builder.AddPersistence();
         builder.AddLogging();
         builder.AddDomainEventHandlers();
+        builder.AddIntegrationEvents();
 
         return builder;
     }
@@ -39,6 +41,7 @@ public static class DependencyInjection
 
         builder.Services.AddSingleton<SetUpdatedAtInterceptor>();
         builder.Services.AddSingleton<ConvertDomainEventsToOutboxMessagesInterceptor>();
+        builder.Services.AddScoped<ConvertIntegrationEventsToOutboxMessagesInterceptor>();
 
         builder.Services.AddDbContext<ApplicationDbContext>((sp, opt) =>
         {
@@ -55,6 +58,7 @@ public static class DependencyInjection
 
             opt.AddInterceptors(sp.GetRequiredService<SetUpdatedAtInterceptor>());
             opt.AddInterceptors(sp.GetRequiredService<ConvertDomainEventsToOutboxMessagesInterceptor>());
+            opt.AddInterceptors(sp.GetRequiredService<ConvertIntegrationEventsToOutboxMessagesInterceptor>());
         });
 
         builder.Services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<ApplicationDbContext>());
@@ -91,6 +95,26 @@ public static class DependencyInjection
         builder.Services.AddScoped<IDomainEventPublisher, DomainEventPublisher>();
 
         builder.Services.AddHostedService<ProcessDomainEventsJob>();
+
+        return builder;
+    }
+
+    private static WebApplicationBuilder AddIntegrationEvents(this WebApplicationBuilder builder)
+    {
+        // 1. Settings & RabbitMQ Connection (Singletons)
+        var rabbitSettings = new RabbitMqSettings();
+        builder.Configuration.GetSection("RabbitMq").Bind(rabbitSettings);
+        builder.Services.AddSingleton(rabbitSettings);
+
+        builder.Services.AddSingleton<IRabbitMqConnection, RabbitMqConnection>();
+        builder.Services.AddSingleton<IIntegrationEventBus, RabbitMqBus>();
+
+        builder.Services.AddScoped<IntegrationEventBuffer>();
+        builder.Services.AddScoped<IIntegrationEventPublisher, IntegrationEventStagingService>();
+
+        builder.Services.AddHostedService<ProcessIntegrationEventsJob>();
+        builder.Services.AddHostedService<IntegrationEventConsumerWorker>();
+
 
         return builder;
     }

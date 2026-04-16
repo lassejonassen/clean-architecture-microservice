@@ -1,4 +1,4 @@
-﻿namespace CleanArchitecture.Domain._Shared;
+﻿namespace CleanArchitecture.Domain._Shared.DomainEvents;
 
 public interface IDomainEvent
 {

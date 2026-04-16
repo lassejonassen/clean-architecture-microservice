@@ -7,6 +7,7 @@
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/CleanArchitecture.Application/CleanArchitecture.Application.csproj" />
+    <Project Path="src/CleanArchitecture.Contracts/CleanArchitecture.Contracts.csproj" Id="14fea6a0-5bc5-466c-ba90-42fcc3bc8104" />
     <Project Path="src/CleanArchitecture.Domain/CleanArchitecture.Domain.csproj" />
     <Project Path="src/CleanArchitecture.Infrastructure/CleanArchitecture.Infrastructure.csproj" />
     <Project Path="src/CleanArchitecture.SharedKernel/CleanArchitecture.SharedKernel.csproj" />

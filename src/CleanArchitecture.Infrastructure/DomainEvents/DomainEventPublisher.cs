@@ -1,5 +1,5 @@
 ﻿using CleanArchitecture.Application.Abstractions.DomainEvents;
-using CleanArchitecture.Domain._Shared;
+using CleanArchitecture.Domain._Shared.DomainEvents;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CleanArchitecture.Infrastructure.DomainEvents;

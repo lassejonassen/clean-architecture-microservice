@@ -1,4 +1,4 @@
-﻿using CleanArchitecture.Domain._Shared;
+﻿using CleanArchitecture.Domain._Shared.DomainEvents;
 
 namespace CleanArchitecture.Application.Abstractions.DomainEvents;
 

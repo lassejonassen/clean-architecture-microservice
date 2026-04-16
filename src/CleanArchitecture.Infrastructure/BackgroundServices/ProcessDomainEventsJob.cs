@@ -1,4 +1,4 @@
-using CleanArchitecture.Domain._Shared;
+using CleanArchitecture.Domain._Shared.DomainEvents;
 using CleanArchitecture.Infrastructure.DomainEvents;
 using CleanArchitecture.Infrastructure.Options;
 using CleanArchitecture.Infrastructure.Persistence.DbContexts;

@@ -4,6 +4,7 @@ using CleanArchitecture.Infrastructure.Persistence.DbContexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CleanArchitecture.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260416213627_Init2")]
+    partial class Init2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -45,41 +48,6 @@ namespace CleanArchitecture.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Templates", (string)null);
-                });
-
-            modelBuilder.Entity("CleanArchitecture.Infrastructure.Persistence.Entities.IntegrationOutboxMessage", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Error")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("OccurredOnUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("ProcessedAtUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OccurredOnUtc");
-
-                    b.HasIndex("ProcessedAtUtc")
-                        .HasDatabaseName("IX_IntegrationOutbox_Unprocessed")
-                        .HasFilter("[ProcessedAtUtc] IS NULL");
-
-                    b.ToTable("IntegrationOutboxMessages", (string)null);
                 });
 
             modelBuilder.Entity("CleanArchitecture.Infrastructure.Persistence.Entities.OutboxMessage", b =>

@@ -1,4 +1,6 @@
-﻿namespace CleanArchitecture.Domain._Shared;
+﻿using CleanArchitecture.Domain._Shared.DomainEvents;
+
+namespace CleanArchitecture.Domain._Shared;
 
 public interface IHasDomainEvents
 {
