@@ -30,40 +30,46 @@ public static class WebApplicationBuilderExtensions
         builder.Services.AddMediator();
         builder.Services.AddProblemDetails();
 
-
-
         builder.Services.AddOpenTelemetry()
-            .ConfigureResource(r => r.AddService(serviceName))
-            .WithTracing(tracing => tracing
-                .AddAspNetCoreInstrumentation()
-                .AddHttpClientInstrumentation()
-                .AddOtlpExporter(opt =>
-                {
-                    opt.Endpoint = new Uri("http://aspire-dashboard:4317");
-                }))
-            .WithMetrics(metrics => metrics
-                .AddAspNetCoreInstrumentation()
-                .AddHttpClientInstrumentation()
-                .AddRuntimeInstrumentation() // <--- Needs the NuGet package above
-                .AddOtlpExporter(opt =>
-                {
-                    opt.Endpoint = new Uri("http://aspire-dashboard:4317");
-                }));
-
-        var resourceBuilder = ResourceBuilder.CreateDefault()
-                .AddService(serviceName);
-
-        builder.Logging.AddOpenTelemetry(logging =>
-        {
-            logging.SetResourceBuilder(resourceBuilder);
-            logging.AddOtlpExporter(opt =>
+            .ConfigureResource(resource => resource.AddService(serviceName))
+            .WithTracing(cfg =>
             {
-                opt.Endpoint = new Uri("http://aspire-dashboard:4317");
+                cfg
+                    .AddSource(serviceName)
+                    .AddAspNetCoreInstrumentation(options =>
+                    {
+                        options.Filter = httpContext =>
+                            httpContext.Request.Path != "/" &&
+                            httpContext.Request.Path != "/health" &&
+                            httpContext.Request.Path != "/alive";
+                    })
+                    .AddHttpClientInstrumentation()
+                    //.AddEntityFrameworkCoreInstrumentation(options =>
+                    //{
+                    //    options.SetDbStatementForText = true;
+                    //    options.SetDbStatementForStoredProcedure = true;
+                    //})
+                    .AddOtlpExporter();
+            })
+            .WithMetrics(cfg =>
+            {
+                cfg.
+                    AddMeter(serviceName)
+                .AddAspNetCoreInstrumentation()
+                    .AddHttpClientInstrumentation()
+                    .AddRuntimeInstrumentation()
+                    .AddOtlpExporter((exporterOptions, metricReaderOptions) =>
+                    {
+                        if (builder.Environment.IsDevelopment())
+                        {
+                            metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = 1000;
+                        }
+                    });
+            })
+            .WithLogging(cfg =>
+            {
+                cfg.AddOtlpExporter();
             });
-            // Optional: include attributes like "userId" in logs
-            logging.IncludeFormattedMessage = true;
-            logging.IncludeScopes = true;
-        });
 
         builder.Services.AddControllers()
             .AddJsonOptions(options =>
