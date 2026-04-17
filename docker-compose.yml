@@ -9,12 +9,32 @@ services:
         condition: service_started
       rabbitmq:
         condition: service_healthy
+      aspiredashboard:
+        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s # Give it time to run migrations
+
+  aspiredashboard:
+    image: mcr.microsoft.com/dotnet/aspire-dashboard:latest
+    ports:
+      - "18888:18888" # Dashboard UI
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+    environment:
+      - ASPIRE_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS=true
+      - ASPIRE_DASHBOARD_OTLP_UNSECURED_ALLOW_ANONYMOUS=true
+    healthcheck:
+      # We check the dashboard UI port to see if the web server is responding
+      test: ["CMD", "curl", "-f", "http://localhost:18888/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    
 
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest

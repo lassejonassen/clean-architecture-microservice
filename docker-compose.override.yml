@@ -10,6 +10,8 @@ services:
       - RabbitMq__UserName=guest
       - RabbitMq__Password=guest
       - RabbitMq__ExchangeName=clean_architecture_integration_exchange
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://aspire-dashboard:4317
+      - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
     ports:
       - "8080:8080"
       - "8081:8081"
