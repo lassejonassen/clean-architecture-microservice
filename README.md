@@ -160,3 +160,21 @@ public interface ICurrentUser {
 - Infrastructure Implementation: Implement ICurrentUser using IHttpContextAccessor to pull the ID from the JWT claims.
 
 - Swagger/OpenAPI UI: Configure Swagger to show the "Authorize" button (Padlock icon). This allows developers to paste a JWT from Keycloak/Azure AD directly into the browser to test the API.
+
+
+# Docker
+
+## Build
+```bash
+docker build -t <image-name> -f .\src\CleanArchitecture.WebAPI\Dockerfile .
+```
+
+## Tag
+```bash
+docker tag <image-name> yourusername/<image-name>:v1.0
+```
+
+## Push
+```bash
+docker push yourusername/<image-name>:v1.0
+```
